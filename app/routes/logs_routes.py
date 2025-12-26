@@ -1,8 +1,9 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from datetime import datetime
 
 from app.services.logs_service import LogsService
 from app.schemas.log_schema import LogValidationError
+from werkzeug.exceptions import BadRequest
 
 logs_bp = Blueprint("logs_bp", __name__, url_prefix="/logs")
 
@@ -10,8 +11,9 @@ logs_bp = Blueprint("logs_bp", __name__, url_prefix="/logs")
 @logs_bp.route("", methods=["POST"])
 def create_log():
     service = LogsService()
+
     try:
-        payload = request.get_json()
+        payload = request.get_json(force=True)
         log_id = service.create_log(payload)
 
         return jsonify({
@@ -19,12 +21,21 @@ def create_log():
             "id": log_id
         }), 201
 
+    except BadRequest:
+        return jsonify({
+            "error": "JSON inválido ou malformado"
+        }), 400
+
     except LogValidationError as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({
+            "error": str(e)
+        }), 400
 
-    except Exception:
-        return jsonify({"error": "Erro interno ao criar log"}), 500
-
+    except Exception as e:
+        current_app.logger.exception(e)
+        return jsonify({
+            "error": "Erro interno ao criar log"
+        }), 500
 
 @logs_bp.route("", methods=["GET"])
 def get_logs():
@@ -57,5 +68,6 @@ def get_logs():
     except ValueError:
         return jsonify({"error": "Formato de data inválido. Use ISO 8601."}), 400
 
-    except Exception:
+    except Exception as e:
+        print(str(e))
         return jsonify({"error": "Erro interno ao buscar logs"}), 500
