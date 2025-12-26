@@ -7,6 +7,10 @@ class LogsService:
     def __init__(self):
         self.repository = LogsRepository()
 
+    def _serialize_log(self, log: dict) -> dict:
+        log["id"] = str(log.pop("_id"))
+        return log
+
     def create_log(self, payload: dict) -> str:
         """
         Cria um novo log no sistema.
@@ -25,6 +29,7 @@ class LogsService:
         start_date: datetime | None = None,
         end_date: datetime | None = None
     ) -> list:
+    
         """
         Busca logs aplicando filtros dinâmicos.
         """
@@ -45,4 +50,5 @@ class LogsService:
             if end_date:
                 filters["created_at"]["$lte"] = end_date
 
-        return self.repository.find_logs(filters)
+        logs = self.repository.find_logs(filters)
+        return [self._serialize_log(log) for log in logs]

@@ -69,5 +69,4 @@ def get_logs():
         return jsonify({"error": "Formato de data inválido. Use ISO 8601."}), 400
 
     except Exception as e:
-        print(str(e))
         return jsonify({"error": "Erro interno ao buscar logs"}), 500
