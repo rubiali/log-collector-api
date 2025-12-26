@@ -18,4 +18,31 @@ class LogsService:
         log_id = self.repository.insert_log(log_data)
         return log_id
 
-    
+    def get_logs(
+        self,
+        level: str | None = None,
+        service: str | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None
+    ) -> list:
+        """
+        Busca logs aplicando filtros dinâmicos.
+        """
+        filters = {}
+
+        if level:
+            filters["level"] = level.upper()
+
+        if service:
+            filters["service"] = service
+
+        if start_date or end_date:
+            filters["created_at"] = {}
+
+            if start_date:
+                filters["created_at"]["$gte"] = start_date
+
+            if end_date:
+                filters["created_at"]["$lte"] = end_date
+
+        return self.repository.find_logs(filters)
