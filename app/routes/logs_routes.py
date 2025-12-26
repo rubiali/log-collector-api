@@ -3,6 +3,7 @@ from datetime import datetime
 
 from app.services.logs_service import LogsService
 from app.schemas.log_schema import LogValidationError
+from app.utils.datetime_utils import parse_iso_date
 from werkzeug.exceptions import BadRequest
 
 logs_bp = Blueprint("logs_bp", __name__, url_prefix="/logs")
@@ -40,21 +41,12 @@ def create_log():
 @logs_bp.route("", methods=["GET"])
 def get_logs():
     service = LogsService()
+
     try:
         level = request.args.get("level")
         service_name = request.args.get("service")
-
-        start_date = request.args.get("from")
-        end_date = request.args.get("to")
-
-        start_date = (
-            datetime.fromisoformat(start_date)
-            if start_date else None
-        )
-        end_date = (
-            datetime.fromisoformat(end_date)
-            if end_date else None
-        )
+        start_date = parse_iso_date(request.args.get("start_date"))
+        end_date = parse_iso_date(request.args.get("end_date"))
 
         logs = service.get_logs(
             level=level,
@@ -65,8 +57,8 @@ def get_logs():
 
         return jsonify(logs), 200
 
-    except ValueError:
-        return jsonify({"error": "Formato de data inválido. Use ISO 8601."}), 400
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
 
     except Exception as e:
         return jsonify({"error": "Erro interno ao buscar logs"}), 500
