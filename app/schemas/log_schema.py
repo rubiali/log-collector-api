@@ -34,11 +34,18 @@ def validate_log_payload(data: dict) -> dict:
         if not isinstance(data[field], str) or not data[field].strip():
             raise LogValidationError(f"Campo '{field}' deve ser uma string não vazia")
 
+    # Campo opcional
+    metadata = data.get("metadata", {})
+
+    if metadata is not None and not isinstance(metadata, dict):
+        raise LogValidationError("Campo 'metadata' deve ser um objeto")
+
     # Normalização
     normalized_log = {
         "level": data["level"].upper(),
         "service": data["service"],
         "message": data["message"],
+        "metadata": metadata,
         "created_at": datetime.utcnow()
     }
 
