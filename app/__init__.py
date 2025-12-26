@@ -1,5 +1,6 @@
 from flask import Flask
 from .config.settings import DevelopmentConfig
+from app.db.mongo import setup_indexes
 
 def create_app(config_class=DevelopmentConfig):
     app = Flask(__name__)
@@ -10,5 +11,8 @@ def create_app(config_class=DevelopmentConfig):
 
     app.register_blueprint(main_bp)
     app.register_blueprint(logs_bp)
+
+    with app.app_context():
+        setup_indexes()
 
     return app
